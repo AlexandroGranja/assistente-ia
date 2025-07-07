@@ -1,0 +1,181 @@
+{
+  "version": "6.1",
+  "name": "Assistente PROSPER v2.0 - IA",
+  "theme": {},
+  "settings": {
+    "general": {
+      "isBrandingEnabled": true
+    }
+  },
+  "variables": [
+    {
+      "id": "var_user_input",
+      "name": "user_input"
+    },
+    {
+      "id": "var_system_response",
+      "name": "system_response"
+    },
+    {
+      "id": "var_user_name",
+      "name": "user_name",
+      "value": "{{user.name}}"
+    }
+  ],
+  "events": [
+    {
+      "id": "start-event-01",
+      "graphCoordinates": {
+        "x": -200,
+        "y": 200
+      },
+      "type": "start",
+      "outgoingEdgeId": "edge_start_to_welcome"
+    }
+  ],
+  "groups": [
+    {
+      "id": "group_welcome",
+      "title": "1. Boas-vindas",
+      "graphCoordinates": {
+        "x": 100,
+        "y": 200
+      },
+      "blocks": [
+        {
+          "id": "block_welcome_text",
+          "type": "text",
+          "outgoingEdgeId": "edge_welcome_to_input",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  { "text": "Olá, {{user.name}}! 👋" }
+                ]
+              },
+              {
+                "type": "p",
+                "children": [
+                  { "text": "Sou a Prosper, sua assistente de IA. Como posso te ajudar hoje?" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "group_input",
+      "title": "2. Coletar Pergunta",
+      "graphCoordinates": {
+        "x": 400,
+        "y": 200
+      },
+      "blocks": [
+        {
+          "id": "block_user_input",
+          "type": "text input",
+          "outgoingEdgeId": "edge_input_to_webhook",
+          "options": {
+            "variableId": "var_user_input",
+            "labels": {
+              "placeholder": "Digite sua dúvida ou problema..."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "group_webhook",
+      "title": "3. Chamar Gerente IA (n8n)",
+      "graphCoordinates": {
+        "x": 700,
+        "y": 200
+      },
+      "blocks": [
+        {
+          "id": "block_call_n8n",
+          "type": "Webhook",
+          "outgoingEdgeId": "edge_webhook_to_response",
+          "options": {
+            "isCustomBody": true,
+            "webhook": {
+              "url": "COLE_AQUI_A_URL_DE_PRODUCAO_DO_SEU_WEBHOOK_N8N",
+              "method": "POST",
+              "body": "{\n  \"descricao\": \"{{user_input}}\",\n  \"usuario\": \"{{user_name}}\"\n}",
+              "headers": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "id": "header_content_type"
+                }
+              ]
+            },
+            "responseVariableMapping": [
+              {
+                "variableId": "var_system_response",
+                "bodyPath": "resposta",
+                "id": "map_response"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "group_response",
+      "title": "4. Exibir Resposta",
+      "graphCoordinates": {
+        "x": 1000,
+        "y": 200
+      },
+      "blocks": [
+        {
+          "id": "block_show_response",
+          "type": "text",
+          "outgoingEdgeId": "edge_response_to_loop",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  { "text": "{{system_response}}" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "group_loop",
+      "title": "5. Continuar?",
+      "graphCoordinates": {
+        "x": 1300,
+        "y": 200
+      },
+      "blocks": [
+        {
+          "id": "block_loop_choice",
+          "type": "choice input",
+          "items": [
+            {
+              "id": "item_continue_yes",
+              "content": "Posso ajudar com mais alguma coisa?",
+              "outgoingEdgeId": "edge_loop_to_input"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "edge_start_to_welcome", "from": { "eventId": "start-event-01" }, "to": { "groupId": "group_welcome" } },
+    { "id": "edge_welcome_to_input", "from": { "blockId": "block_welcome_text" }, "to": { "groupId": "group_input" } },
+    { "id": "edge_input_to_webhook", "from": { "blockId": "block_user_input" }, "to": { "groupId": "group_webhook" } },
+    { "id": "edge_webhook_to_response", "from": { "blockId": "block_call_n8n" }, "to": { "groupId": "group_response" } },
+    { "id": "edge_response_to_loop", "from": { "blockId": "block_show_response" }, "to": { "groupId": "group_loop" } },
+    { "id": "edge_loop_to_input", "from": { "blockId": "block_loop_choice", "itemId": "item_continue_yes" }, "to": { "groupId": "group_input" } }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "name": "Gerente de IA - Assistente Prosper",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ASSISTENTE_PROSPER_WEBHOOK",
+        "options": {}
+      },
+      "id": "5f6e3b7b-8c9d-4f2a-9e1b-7c8d9a0b1c2d",
+      "name": "Webhook Principal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        300
+      ],
+      "webhookId": "ASSISTENTE_PROSPER_WEBHOOK"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "value1": "={{ $json.body.descricao }}",
+              "operation": "contains",
+              "value2": "impressora"
+            },
+            {
+              "operator": "or",
+              "value1": "={{ $json.body.descricao }}",
+              "operation": "contains",
+              "value2": "computador"
+            },
+            {
+              "operator": "or",
+              "value1": "={{ $json.body.descricao }}",
+              "operation": "contains",
+              "value2": "problema"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6",
+      "name": "É um Ticket de Suporte?",
+      "type": "n8n-nodes-base.router",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "COLE_O_ID_DA_SUA_PLANILHA_AQUI",
+        "sheetName": "Página1",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "value": "={{ $now.toFormat('dd/MM/yyyy HH:mm:ss') }}"
+            },
+            {
+              "id": "Descrição do Problema",
+              "displayName": "Descrição do Problema",
+              "value": "={{ $json.body.descricao }}"
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "value": "Aberto"
+            }
+          ]
+        }
+      },
+      "id": "b2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+      "name": "Criar Ticket no Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        200,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "COLE_O_ID_DA_SUA_CREDENCIAL_DO_GOOGLE_AQUI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "COLE_SUA_URL_NGROK_AQUI/api/ask-local-ai",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pergunta",
+              "value": "={{ $json.body.pergunta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3d4e5f6-g7h8-i9j0-k1l2-m3n4o5p6q7r8",
+      "name": "Perguntar para IA Local",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={\n  \"resposta\": \"Ticket de suporte criado com sucesso!\"\n}"
+      },
+      "id": "d4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
+      "name": "Responder Confirmação do Ticket",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{ $json }}"
+      },
+      "id": "e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
+      "name": "Responder com Resposta da IA",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Principal": {
+      "main": [
+        [
+          {
+            "node": "É um Ticket de Suporte?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É um Ticket de Suporte?": {
+      "main": [
+        [
+          {
+            "node": "Criar Ticket no Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Perguntar para IA Local",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Criar Ticket no Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Responder Confirmação do Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perguntar para IA Local": {
+      "main": [
+        [
+          {
+            "node": "Responder com Resposta da IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1.0",
+  "id": "ASSISTENTE_PROSPER_V2"
+}
