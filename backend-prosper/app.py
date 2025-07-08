@@ -251,4 +251,8 @@ def testar_n8n():
 # Ponto de entrada da aplicação
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+<<<<<<< HEAD
     aplicacao.run(debug=False, host='0.0.0.0', port=port)
+=======
+    aplicacao.run(debug=False, host='0.0.0.0', port=port)
+>>>>>>> 6ca5711974f219a7f6beb7f0e8083960d66b5f54
